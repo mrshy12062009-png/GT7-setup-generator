@@ -1,0 +1,8 @@
+[
+{"name":"Suzuka Circuit","type":"technical"},
+{"name":"Le Mans","type":"highspeed"},
+{"name":"Spa-Francorchamps","type":"mixed"},
+{"name":"Nürburgring Nordschleife","type":"technical"},
+{"name":"Daytona Road Course","type":"mixed"},
+{"name":"Tokyo Expressway","type":"highspeed"}
+]
