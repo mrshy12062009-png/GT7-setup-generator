@@ -210,6 +210,28 @@ button:active {
   font-size: 0.85rem;
 }
 
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.setup-list {
+  display: grid;
+  gap: 12px;
+}
+
+.setup-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  display: grid;
+  gap: 6px;
+}
+
 @media (max-width: 900px) {
   .hero {
     flex-direction: column;

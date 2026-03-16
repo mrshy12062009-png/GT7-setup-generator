@@ -1,4 +1,5 @@
 const DATA_BASE_REMOTE = "https://ddm999.github.io/gt7info/data/db";
+const DATA_META_REMOTE = "https://ddm999.github.io/gt7info/data.json";
 const DATA_BASE_LOCAL = "./data";
 
 const weathers = ["Clear", "Overcast", "Rain", "Variable", "Sunset", "Night", "Random"];
@@ -52,14 +53,29 @@ const elements = {
   newTrackCountry: document.getElementById("newTrackCountry"),
   newTrackName: document.getElementById("newTrackName"),
   newTrackLayouts: document.getElementById("newTrackLayouts"),
-  dataStatus: document.getElementById("dataStatus")
+  dataStatus: document.getElementById("dataStatus"),
+  dataUpdated: document.getElementById("dataUpdated"),
+  setupImport: document.getElementById("setupImport"),
+  setupImportBtn: document.getElementById("setupImportBtn"),
+  setupClearBtn: document.getElementById("setupClearBtn"),
+  setupExportBtn: document.getElementById("setupExportBtn"),
+  setupCount: document.getElementById("setupCount"),
+  setupMatches: document.getElementById("setupMatches"),
+  presetSave: document.getElementById("presetSave"),
+  presetNote: document.getElementById("presetNote"),
+  presetSuspension: document.getElementById("presetSuspension"),
+  presetTransmission: document.getElementById("presetTransmission"),
+  presetAero: document.getElementById("presetAero"),
+  presetLsd: document.getElementById("presetLsd")
 };
 
 let cars = [];
 let tracks = [];
-let trackLayoutIndex = new Map();
 let stockPerfByCar = new Map();
 let engineSwapsByCar = new Map();
+let setupDb = [];
+
+const setupStorageKey = "gt7-setup-db";
 
 function setLoadingState(isLoading) {
   const selects = [
@@ -276,6 +292,68 @@ function formatNumber(value, suffix = "") {
   return `${value}${suffix}`;
 }
 
+function loadSetupDb() {
+  const stored = localStorage.getItem(setupStorageKey);
+  setupDb = stored ? JSON.parse(stored) : [];
+  updateSetupCount();
+}
+
+function saveSetupDb() {
+  localStorage.setItem(setupStorageKey, JSON.stringify(setupDb));
+  updateSetupCount();
+}
+
+function updateSetupCount() {
+  elements.setupCount.textContent = `${setupDb.length} Eintraege`;
+}
+
+function scoreSetupMatch(entry) {
+  const car = elements.carName.value;
+  const track = elements.trackName.value;
+  const layout = elements.trackLayout.value;
+  const weather = elements.weather.value;
+  const tire = elements.tires.value;
+
+  let score = 0;
+  if (entry.car === car) score += 3;
+  if (entry.track === track) score += 3;
+  if (entry.layout && entry.layout === layout) score += 2;
+  if (entry.weather && entry.weather === weather) score += 1;
+  if (entry.tires && entry.tires === tire) score += 1;
+
+  return score;
+}
+
+function renderSetupMatches() {
+  const matches = setupDb
+    .map((entry) => ({ entry, score: scoreSetupMatch(entry) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
+  if (!matches.length) {
+    elements.setupMatches.innerHTML = "<div class=\"muted\">Keine passenden Setups gefunden.</div>";
+    return;
+  }
+
+  elements.setupMatches.innerHTML = matches
+    .map(({ entry }) => {
+      const parts = [
+        `<div><strong>${entry.car}</strong> — ${entry.track}${entry.layout ? ` / ${entry.layout}` : ""}</div>`,
+        entry.weather ? `<div>Wetter: ${entry.weather}</div>` : "",
+        entry.tires ? `<div>Reifen: ${entry.tires}</div>` : "",
+        entry.setup?.suspension ? `<div>Fahrwerk: ${entry.setup.suspension}</div>` : "",
+        entry.setup?.transmission ? `<div>Getriebe: ${entry.setup.transmission}</div>` : "",
+        entry.setup?.aero ? `<div>Aero: ${entry.setup.aero}</div>` : "",
+        entry.setup?.lsd ? `<div>LSD: ${entry.setup.lsd}</div>` : "",
+        entry.setup?.notes ? `<div>Notiz: ${entry.setup.notes}</div>` : ""
+      ].filter(Boolean);
+
+      return `<div class=\"setup-card\">${parts.join("")}</div>`;
+    })
+    .join("");
+}
+
 function generateSetup() {
   const car = findSelectedCar();
   const layout = findSelectedTrackLayout();
@@ -297,6 +375,8 @@ function generateSetup() {
     <div><strong>Regen erlaubt:</strong> ${layout ? (layout.noRain ? "Nein" : "Ja") : "-"}</div>
     <div><strong>Engine Swap:</strong> ${engineSwaps && engineSwaps.length ? engineSwaps.join(", ") : "-"}</div>
   `;
+
+  renderSetupMatches();
 }
 
 function randomChoice(list) {
@@ -353,6 +433,122 @@ function addTrack() {
   elements.newTrackName.value = "";
   elements.newTrackLayouts.value = "";
   renderTrackSelectors();
+}
+
+function normalizeSetupEntry(entry) {
+  return {
+    car: entry.car || entry.Car || entry.auto || "",
+    track: entry.track || entry.Track || entry.strecke || "",
+    layout: entry.layout || entry.Layout || entry.layoutname || "",
+    weather: entry.weather || entry.Wetter || "",
+    tires: entry.tires || entry.Reifen || entry.tyres || "",
+    setup: {
+      suspension: entry.suspension || entry.setup_suspension || "",
+      transmission: entry.transmission || entry.setup_transmission || "",
+      aero: entry.aero || entry.setup_aero || "",
+      lsd: entry.lsd || entry.setup_lsd || "",
+      notes: entry.notes || entry.Notizen || ""
+    }
+  };
+}
+
+function importSetupJson(text) {
+  const raw = JSON.parse(text);
+  if (!Array.isArray(raw)) throw new Error("JSON muss ein Array sein.");
+  const entries = raw.map(normalizeSetupEntry).filter((entry) => entry.car && entry.track);
+  setupDb = [...setupDb, ...entries];
+  saveSetupDb();
+}
+
+function importSetupCsv(text) {
+  const rows = parseCsv(text);
+  const header = rows[0].map((h) => h.trim());
+  const entries = rows.slice(1).map((row) => {
+    const obj = {};
+    header.forEach((key, index) => {
+      obj[key] = row[index];
+    });
+    return normalizeSetupEntry(obj);
+  });
+
+  setupDb = [...setupDb, ...entries.filter((entry) => entry.car && entry.track)];
+  saveSetupDb();
+}
+
+function handleSetupImport() {
+  const file = elements.setupImport.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      if (file.name.endsWith(".json")) {
+        importSetupJson(reader.result);
+      } else {
+        importSetupCsv(reader.result);
+      }
+      elements.setupImport.value = "";
+      elements.setupMatches.innerHTML = "<div class=\"muted\">Import erfolgreich.</div>";
+      renderSetupMatches();
+    } catch (error) {
+      elements.setupMatches.innerHTML = `<div class=\"muted\">Import fehlgeschlagen: ${error.message}</div>`;
+    }
+  };
+  reader.readAsText(file);
+}
+
+function exportSetups() {
+  const blob = new Blob([JSON.stringify(setupDb, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "gt7-setups.json";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearSetups() {
+  setupDb = [];
+  saveSetupDb();
+  elements.setupMatches.innerHTML = "<div class=\"muted\">Setup-Datenbank geloescht.</div>";
+}
+
+function savePreset() {
+  const entry = {
+    car: elements.carName.value,
+    track: elements.trackName.value,
+    layout: elements.trackLayout.value,
+    weather: elements.weather.value,
+    tires: elements.tires.value,
+    setup: {
+      suspension: elements.presetSuspension.value.trim(),
+      transmission: elements.presetTransmission.value.trim(),
+      aero: elements.presetAero.value.trim(),
+      lsd: elements.presetLsd.value.trim(),
+      notes: elements.presetNote.value.trim()
+    }
+  };
+
+  setupDb.push(entry);
+  saveSetupDb();
+  elements.presetNote.value = "";
+  elements.presetSuspension.value = "";
+  elements.presetTransmission.value = "";
+  elements.presetAero.value = "";
+  elements.presetLsd.value = "";
+  elements.setupMatches.innerHTML = "<div class=\"muted\">Preset gespeichert.</div>";
+  renderSetupMatches();
+}
+
+async function loadMetaTimestamp() {
+  try {
+    const metaText = await fetchText(DATA_META_REMOTE);
+    const meta = JSON.parse(metaText);
+    if (meta?.updatetimestamp) {
+      elements.dataUpdated.textContent = `Letztes Update: ${meta.updatetimestamp}`;
+    }
+  } catch (error) {
+    elements.dataUpdated.textContent = "Letztes Update: unbekannt";
+  }
 }
 
 async function loadData() {
@@ -460,7 +656,7 @@ async function loadData() {
     cars = sortCars(cars);
 
     elements.dataStatus.textContent =
-      "Quelle: GT7Info (Community). Remote geladen, falls erreichbar.";
+      "Quelle: GT7Info (Community). Remote wird bei jedem Laden abgefragt.";
   } catch (error) {
     elements.dataStatus.textContent =
       "Fehler beim Laden der Daten. Bitte Seite neu laden oder lokal mit einem Webserver oeffnen.";
@@ -472,8 +668,10 @@ async function loadData() {
   }
 }
 
+loadSetupDb();
 renderConditions();
 setLoadingState(true);
+loadMetaTimestamp();
 loadData();
 
 elements.carCountry.addEventListener("change", renderCarSelectors);
@@ -488,3 +686,8 @@ elements.generate.addEventListener("click", generateSetup);
 elements.randomize.addEventListener("click", randomize);
 elements.addCar.addEventListener("click", addCar);
 elements.addTrack.addEventListener("click", addTrack);
+
+elements.setupImportBtn.addEventListener("click", handleSetupImport);
+elements.setupClearBtn.addEventListener("click", clearSetups);
+elements.setupExportBtn.addEventListener("click", exportSetups);
+elements.presetSave.addEventListener("click", savePreset);

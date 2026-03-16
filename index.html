@@ -312,6 +312,58 @@ loadTracks()
       </section>
 
       <section class="card wide">
+        <h2>Setup-Datenbank</h2>
+        <p class="muted">Importiere CSV oder JSON mit Community-Setups. Die Daten werden lokal im Browser gespeichert.</p>
+        <div class="field">
+          <label for="setupImport">Datei</label>
+          <input id="setupImport" type="file" accept=".csv,.json" />
+        </div>
+        <div class="actions">
+          <button id="setupImportBtn" class="ghost">Importieren</button>
+          <button id="setupExportBtn" class="ghost">Exportieren</button>
+          <button id="setupClearBtn" class="ghost">Loeschen</button>
+        </div>
+        <div class="meta-row">
+          <span id="setupCount">0 Eintraege</span>
+        </div>
+        <div id="setupMatches" class="setup-list">Noch keine Setups geladen.</div>
+      </section>
+
+      <section class="card wide">
+        <h2>Preset-Editor</h2>
+        <p class="muted">Speichere ein Setup fuer die aktuelle Auswahl.</p>
+        <div class="split">
+          <div>
+            <div class="field">
+              <label for="presetSuspension">Fahrwerk</label>
+              <input id="presetSuspension" type="text" placeholder="z.B. 95/100, 4/6, 25/28" />
+            </div>
+            <div class="field">
+              <label for="presetTransmission">Getriebe</label>
+              <input id="presetTransmission" type="text" placeholder="z.B. 320 km/h, 3.10 Final" />
+            </div>
+          </div>
+          <div>
+            <div class="field">
+              <label for="presetAero">Aero</label>
+              <input id="presetAero" type="text" placeholder="z.B. 120/220" />
+            </div>
+            <div class="field">
+              <label for="presetLsd">LSD</label>
+              <input id="presetLsd" type="text" placeholder="z.B. 10/15/20" />
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="presetNote">Notiz</label>
+          <input id="presetNote" type="text" placeholder="z.B. fuer Regen anpassen" />
+        </div>
+        <div class="actions">
+          <button id="presetSave" class="primary">Preset speichern</button>
+        </div>
+      </section>
+
+      <section class="card wide">
         <h2>Eigene Daten</h2>
         <p class="muted">Neue Eintraege gelten nur fuer diese Sitzung im Browser.</p>
         <div class="split">
@@ -353,6 +405,7 @@ loadTracks()
 
     <footer class="footer">
       <div id="dataStatus" class="data-status">Quelle wird geladen...</div>
+      <div id="dataUpdated" class="note">Letztes Update: ...</div>
       <div class="note">Setup-Empfehlungen sind nur moeglich, wenn eine Setup-Datenbank vorhanden ist.</div>
     </footer>
 
