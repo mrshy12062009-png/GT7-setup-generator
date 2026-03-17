@@ -103,8 +103,43 @@
           <button id="setupExportBtn" class="ghost">Exportieren</button>
           <button id="setupClearBtn" class="ghost">Loeschen</button>
         </div>
+        <div class="filter-panel">
+          <div class="filter-row">
+            <div class="field">
+              <label for="setupFilterCar">Auto</label>
+              <select id="setupFilterCar"></select>
+            </div>
+            <div class="field">
+              <label for="setupFilterTrack">Strecke</label>
+              <select id="setupFilterTrack"></select>
+            </div>
+            <div class="field">
+              <label for="setupFilterLayout">Layout</label>
+              <select id="setupFilterLayout"></select>
+            </div>
+            <div class="field">
+              <label for="setupFilterWeather">Wetter</label>
+              <select id="setupFilterWeather"></select>
+            </div>
+            <div class="field">
+              <label for="setupFilterTires">Reifen</label>
+              <select id="setupFilterTires"></select>
+            </div>
+          </div>
+          <div class="filter-row filter-actions">
+            <div class="field filter-search">
+              <label for="setupFilterSearch">Freitext</label>
+              <input id="setupFilterSearch" type="text" placeholder="Suche in Auto, Strecke, Layout, Notiz" />
+            </div>
+            <div class="actions">
+              <button id="setupFilterApply" class="primary">Filter anwenden</button>
+              <button id="setupFilterReset" class="ghost">Reset</button>
+            </div>
+          </div>
+        </div>
         <div class="meta-row">
           <span id="setupCount">0 Eintraege</span>
+          <span id="setupMatchCount">0 Treffer</span>
         </div>
         <div id="setupMatches" class="setup-list">Noch keine Setups geladen.</div>
       </section>
