@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 
 const DATA_BASE_REMOTE = "https://ddm999.github.io/gt7info/data/db";
 const DATA_META_REMOTE = "https://ddm999.github.io/gt7info/data.json";
@@ -115,6 +115,23 @@ function buildOptions(list, key) {
   return [...new Set(list.map((item) => item[key]).filter(Boolean))].sort();
 }
 
+function normalizeSetupEntry(entry) {
+  return {
+    car: entry.car || entry.Car || entry.auto || "",
+    track: entry.track || entry.Track || entry.strecke || "",
+    layout: entry.layout || entry.Layout || entry.layoutname || "",
+    weather: entry.weather || entry.Wetter || "",
+    tires: entry.tires || entry.Reifen || entry.tyres || "",
+    setup: {
+      suspension: entry.suspension || entry.setup_suspension || "",
+      transmission: entry.transmission || entry.setup_transmission || "",
+      aero: entry.aero || entry.setup_aero || "",
+      lsd: entry.lsd || entry.setup_lsd || "",
+      notes: entry.notes || entry.Notizen || ""
+    }
+  };
+}
+
 export default function App() {
   const trackSectionRef = useRef(null);
 
@@ -125,7 +142,6 @@ export default function App() {
   const [cars, setCars] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [stockPerfByCar, setStockPerfByCar] = useState(new Map());
-
   const [carSearch, setCarSearch] = useState("");
   const [trackSearch, setTrackSearch] = useState("");
 
@@ -150,7 +166,8 @@ export default function App() {
     search: ""
   });
 
-  const [resultHtml, setResultHtml] = useState("W�hle Optionen und klicke auf Generieren.");
+  const [resultHtml, setResultHtml] = useState("Wähle Optionen und klicke auf Generieren.");
+  const [importNote, setImportNote] = useState("");
 
   useEffect(() => {
     const stored = localStorage.getItem(setupStorageKey);
@@ -253,7 +270,7 @@ export default function App() {
         setTracks(trackList);
         setStockPerfByCar(stockMap);
       } catch (err) {
-        setError("Daten konnten nicht geladen werden. Bitte sp�ter erneut versuchen oder Seite neu laden.");
+        setError("Daten konnten nicht geladen werden. Bitte später erneut versuchen oder Seite neu laden.");
       } finally {
         setLoading(false);
       }
@@ -307,6 +324,7 @@ export default function App() {
       tires: tire,
       search: ""
     });
+    setImportNote("");
   }, [carName, trackName, trackLayout, weather, tire]);
 
   const filteredCars = useMemo(() => {
@@ -331,8 +349,81 @@ export default function App() {
     <div className="preview-card">
       <div><strong>Auto:</strong> {carCountry} / {carBrand} / {carName}</div>
       <div><strong>Strecke:</strong> {trackCountry} / {trackName} / {trackLayout}</div>
+      <div><strong>Bedingungen:</strong> {weather} · {tire}</div>
     </div>
   );
+
+  const setupCarOptions = useMemo(() => buildOptions(cars, "name"), [cars]);
+  const setupTrackOptions = useMemo(() => buildOptions(tracks, "name"), [tracks]);
+  const setupLayoutOptions = useMemo(() => {
+    if (!tracks.length) return [];
+    if (setupFilters.track) {
+      const selectedTrack = tracks.find((t) => t.name === setupFilters.track);
+      return selectedTrack ? selectedTrack.layouts.map((layout) => layout.name) : [];
+    }
+    return [...new Set(tracks.flatMap((t) => t.layouts.map((layout) => layout.name)))].sort();
+  }, [tracks, setupFilters.track]);
+  const setupWeatherOptions = weathers;
+  const setupTireOptions = tires;
+
+  const setupMatches = useMemo(() => {
+    if (!setupDb.length) return [];
+    const activeFilters = ["car", "track", "layout", "weather", "tires"].filter(
+      (key) => setupFilters[key]
+    );
+    const search = setupFilters.search.trim().toLowerCase();
+
+    return setupDb
+      .map((raw) => {
+        const entry = normalizeSetupEntry(raw);
+        if (!entry.car || !entry.track) return null;
+        const fieldMatches = activeFilters.map((key) => entry[key] === setupFilters[key]);
+        const fieldMatchCount = fieldMatches.filter(Boolean).length;
+
+        const searchOk = !search
+          ? true
+          : [entry.car, entry.track, entry.layout, entry.setup?.notes]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase()
+            .includes(search);
+
+        const exact =
+          (activeFilters.length ? fieldMatchCount === activeFilters.length : true) &&
+          (search ? searchOk : true);
+
+        const include =
+          (!activeFilters.length && !search) ||
+          (search && searchOk) ||
+          fieldMatchCount > 0;
+
+        if (!include) return null;
+
+        let score = 0;
+        if (setupFilters.car && entry.car === setupFilters.car) score += 3;
+        if (setupFilters.track && entry.track === setupFilters.track) score += 3;
+        if (setupFilters.layout && entry.layout === setupFilters.layout) score += 2;
+        if (setupFilters.weather && entry.weather === setupFilters.weather) score += 1;
+        if (setupFilters.tires && entry.tires === setupFilters.tires) score += 1;
+        if (search && searchOk) score += 1;
+
+        return { entry, exact, score };
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        if (a.exact !== b.exact) return a.exact ? -1 : 1;
+        if (b.score !== a.score) return b.score - a.score;
+        const carCompare = (a.entry.car || "").localeCompare(b.entry.car || "");
+        if (carCompare !== 0) return carCompare;
+        return (a.entry.track || "").localeCompare(b.entry.track || "");
+      });
+  }, [setupDb, setupFilters]);
+
+  useEffect(() => {
+    if (setupFilters.layout && !setupLayoutOptions.includes(setupFilters.layout)) {
+      setSetupFilters((prev) => ({ ...prev, layout: "" }));
+    }
+  }, [setupLayoutOptions, setupFilters.layout]);
 
   const handleGenerate = () => {
     const car = cars.find((c) => c.name === carName && c.brand === carBrand);
@@ -347,9 +438,9 @@ export default function App() {
       <div><strong>Wetter:</strong> ${weather}</div>
       <div><strong>Reifen:</strong> ${tire}</div>
       <div><strong>PP (Serie):</strong> ${pp ? pp.toFixed(2) : "-"}</div>
-      <div><strong>L�nge:</strong> ${layout?.length ?? "-"} m</div>
+      <div><strong>Länge:</strong> ${layout?.length ?? "-"} m</div>
       <div><strong>Kurven:</strong> ${layout?.corners ?? "-"}</div>
-      <div><strong>H�henmeter:</strong> ${layout?.elevation ?? "-"} m</div>
+      <div><strong>Höhenmeter:</strong> ${layout?.elevation ?? "-"} m</div>
       <div><strong>Regen erlaubt:</strong> ${layout ? (layout.noRain ? "Nein" : "Ja") : "-"}</div>
     `);
 
@@ -365,7 +456,7 @@ export default function App() {
         <div className="hero__content">
           <p className="kicker">Gran Turismo 7</p>
           <h1>Setup Generator</h1>
-          <p className="sub">Sortiert nach Land und Marke. W�hle Auto, Strecke, Layout, Wetter und Reifen.</p>
+          <p className="sub">Sortiert nach Land und Marke. Wähle Auto, Strecke, Layout, Wetter und Reifen.</p>
         </div>
         <div className="hero__panel">
           <div className="stat">
@@ -380,7 +471,7 @@ export default function App() {
       </header>
 
       {error && <div className="banner is-visible">{error}</div>}
-      {loading && <div className="loading is-visible">L�dt Daten �</div>}
+      {loading && <div className="loading is-visible">Lädt Daten …</div>}
 
       <main className="grid">
         <section className="card">
@@ -411,7 +502,7 @@ export default function App() {
           </div>
           <div className="field">
             <label>Suche</label>
-            <input value={carSearch} onChange={(e) => setCarSearch(e.target.value)} placeholder="z.?B. Supra" />
+            <input value={carSearch} onChange={(e) => setCarSearch(e.target.value)} placeholder="z. B. Supra" />
           </div>
         </section>
 
@@ -443,7 +534,7 @@ export default function App() {
           </div>
           <div className="field">
             <label>Suche</label>
-            <input value={trackSearch} onChange={(e) => setTrackSearch(e.target.value)} placeholder="z.?B. Suzuka" />
+            <input value={trackSearch} onChange={(e) => setTrackSearch(e.target.value)} placeholder="z. B. Suzuka" />
           </div>
         </section>
 
@@ -479,12 +570,193 @@ export default function App() {
           <h2>Auswahl</h2>
           {selectionPreview}
         </section>
+
+        <section className="card full">
+          <h2>Setup-Datenbank</h2>
+          <div className="muted">Einträge: {setupDb.length} · Treffer: {setupMatches.length}</div>
+          <div className="filters">
+            <div className="field">
+              <label>Auto</label>
+              <select value={setupFilters.car} onChange={(e) => setSetupFilters((prev) => ({ ...prev, car: e.target.value }))}>
+                <option value="">Alle</option>
+                {setupCarOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Strecke</label>
+              <select
+                value={setupFilters.track}
+                onChange={(e) =>
+                  setSetupFilters((prev) => ({ ...prev, track: e.target.value, layout: "" }))
+                }
+              >
+                <option value="">Alle</option>
+                {setupTrackOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Layout</label>
+              <select value={setupFilters.layout} onChange={(e) => setSetupFilters((prev) => ({ ...prev, layout: e.target.value }))}>
+                <option value="">Alle</option>
+                {setupLayoutOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Wetter</label>
+              <select
+                value={setupFilters.weather}
+                onChange={(e) => setSetupFilters((prev) => ({ ...prev, weather: e.target.value }))}
+              >
+                <option value="">Alle</option>
+                {setupWeatherOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Reifen</label>
+              <select
+                value={setupFilters.tires}
+                onChange={(e) => setSetupFilters((prev) => ({ ...prev, tires: e.target.value }))}
+              >
+                <option value="">Alle</option>
+                {setupTireOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Freitext</label>
+              <input
+                value={setupFilters.search}
+                onChange={(e) => setSetupFilters((prev) => ({ ...prev, search: e.target.value }))}
+                placeholder="z. B. notizen, auto, strecke"
+              />
+            </div>
+          </div>
+          <div className="actions">
+            <button onClick={() => setSetupFilters((prev) => ({ ...prev }))}>Filter anwenden</button>
+            <button
+              onClick={() =>
+                setSetupFilters({
+                  car: carName,
+                  track: trackName,
+                  layout: trackLayout,
+                  weather,
+                  tires: tire,
+                  search: ""
+                })
+              }
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className="divider"></div>
+
+          <div className="field">
+            <label>Setup-Import (JSON/CSV)</label>
+            <input
+              type="file"
+              accept=".json,.csv"
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                const text = await file.text();
+                try {
+                  let entries = [];
+                  if (file.name.endsWith(".json")) {
+                    const raw = JSON.parse(text);
+                    if (!Array.isArray(raw)) throw new Error("JSON muss ein Array sein.");
+                    entries = raw.map(normalizeSetupEntry).filter((entry) => entry.car && entry.track);
+                  } else {
+                    const rows = parseCsv(text);
+                    const header = rows[0]?.map((h) => h.trim()) ?? [];
+                    entries = rows
+                      .slice(1)
+                      .map((row) => {
+                        const obj = {};
+                        header.forEach((key, index) => {
+                          obj[key] = row[index];
+                        });
+                        return normalizeSetupEntry(obj);
+                      })
+                      .filter((entry) => entry.car && entry.track);
+                  }
+                  const nextDb = [...setupDb, ...entries];
+                  localStorage.setItem(setupStorageKey, JSON.stringify(nextDb));
+                  setSetupDb(nextDb);
+                  setImportNote(`Import ok: ${entries.length} Einträge`);
+                } catch (err) {
+                  setImportNote(`Import fehlgeschlagen: ${err.message}`);
+                } finally {
+                  event.target.value = "";
+                }
+              }}
+            />
+          </div>
+          <div className="actions">
+            <button
+              onClick={() => {
+                const blob = new Blob([JSON.stringify(setupDb, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "gt7-setups.json";
+                link.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Export
+            </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem(setupStorageKey);
+                setSetupDb([]);
+                setImportNote("Setup-Datenbank gelöscht.");
+              }}
+            >
+              Löschen
+            </button>
+          </div>
+          {importNote && <div className="muted">{importNote}</div>}
+
+          <div className="setup-list">
+            {!setupMatches.length && (
+              <div className="muted">Keine passenden Setups gefunden.</div>
+            )}
+            {setupMatches.map(({ entry, score, exact }, idx) => (
+              <div key={`${entry.car}-${entry.track}-${entry.layout}-${idx}`} className="setup-card">
+                <div className="setup-card__title">
+                  <strong>{entry.car}</strong> — {entry.track}{entry.layout ? ` / ${entry.layout}` : ""}
+                </div>
+                <div className="setup-card__meta">
+                  <span>Score: {score}</span>
+                  {exact && <span className="badge">Exact Match</span>}
+                </div>
+                {entry.weather && <div>Wetter: {entry.weather}</div>}
+                {entry.tires && <div>Reifen: {entry.tires}</div>}
+                {entry.setup?.suspension && <div>Fahrwerk: {entry.setup.suspension}</div>}
+                {entry.setup?.transmission && <div>Getriebe: {entry.setup.transmission}</div>}
+                {entry.setup?.aero && <div>Aero: {entry.setup.aero}</div>}
+                {entry.setup?.lsd && <div>LSD: {entry.setup.lsd}</div>}
+                {entry.setup?.notes && <div>Notiz: {entry.setup.notes}</div>}
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
 
       <footer className="footer">
         <div className="data-status">Quelle: GT7Info (Community)</div>
         <div className="note">Letztes Update: {dataUpdated}</div>
-        <div className="note">Setup-Empfehlungen sind nur m�glich, wenn eine Setup-Datenbank vorhanden ist.</div>
+        <div className="note">Setup-Empfehlungen sind nur möglich, wenn eine Setup-Datenbank vorhanden ist.</div>
       </footer>
     </div>
   );

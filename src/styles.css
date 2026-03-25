@@ -98,6 +98,10 @@ body {
   backdrop-filter: blur(6px);
 }
 
+.card.full {
+  grid-column: 1 / -1;
+}
+
 .card h2 {
   margin-top: 0;
   font-size: 1.35rem;
@@ -127,6 +131,11 @@ input {
   font-size: 0.95rem;
 }
 
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .actions {
   display: flex;
   gap: 12px;
@@ -151,6 +160,56 @@ button:active {
   background: linear-gradient(120deg, var(--accent), var(--accent-2));
   color: #fff;
   box-shadow: 0 12px 24px rgba(255, 107, 61, 0.25);
+}
+
+.filters {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 12px;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(11, 13, 16, 0.12);
+  margin: 20px 0;
+}
+
+.setup-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.setup-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  display: grid;
+  gap: 6px;
+}
+
+.setup-card__title {
+  font-size: 1rem;
+}
+
+.setup-card__meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.badge {
+  background: rgba(255, 107, 61, 0.15);
+  color: #9a2c0a;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .result__box {
