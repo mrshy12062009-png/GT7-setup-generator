@@ -33,6 +33,50 @@ const tireCodeMap = {
 };
 
 const setupStorageKey = "gt7-setup-db";
+const seedSetupData = [
+  {
+    car: "KTM X-BOW R '12",
+    track: "Mount Panorama Circuit",
+    layout: "Mount Panorama Motor Racing Circuit",
+    weather: "Clear",
+    tires: "Comfort Soft",
+    setup: {
+      suspension: "Front 70 / Rear 80",
+      transmission: "Auto 310 km/h",
+      aero: "Front 120 / Rear 220",
+      lsd: "Init 10 / Accel 20 / Brake 15",
+      notes: "Stabil bei schnellen Kurven."
+    }
+  },
+  {
+    car: "Bugatti VGT",
+    track: "Nürburgring",
+    layout: "Nordschleife",
+    weather: "Overcast",
+    tires: "Racing Soft",
+    setup: {
+      suspension: "Front 85 / Rear 90",
+      transmission: "Auto 340 km/h",
+      aero: "Front 150 / Rear 260",
+      lsd: "Init 12 / Accel 22 / Brake 18",
+      notes: "Mehr Downforce für Pflanzgarten."
+    }
+  },
+  {
+    car: "Toyota Supra RZ '97",
+    track: "Suzuka Circuit",
+    layout: "GP",
+    weather: "Clear",
+    tires: "Sports Soft",
+    setup: {
+      suspension: "Front 75 / Rear 85",
+      transmission: "Auto 290 km/h",
+      aero: "Front 80 / Rear 140",
+      lsd: "Init 8 / Accel 18 / Brake 14",
+      notes: "Ausbalanciert für S-Kurven."
+    }
+  }
+];
 
 function parseCsv(text) {
   const rows = [];
@@ -172,10 +216,16 @@ export default function App() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(setupStorageKey);
-      setSetupDb(stored ? JSON.parse(stored) : []);
+      if (stored) {
+        setSetupDb(JSON.parse(stored));
+      } else {
+        localStorage.setItem(setupStorageKey, JSON.stringify(seedSetupData));
+        setSetupDb(seedSetupData);
+      }
     } catch (error) {
       localStorage.removeItem(setupStorageKey);
-      setSetupDb([]);
+      localStorage.setItem(setupStorageKey, JSON.stringify(seedSetupData));
+      setSetupDb(seedSetupData);
     }
   }, []);
 
