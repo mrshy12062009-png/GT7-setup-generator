@@ -213,14 +213,12 @@ button:active {
 }
 
 .result__box {
-  border-radius: 16px;
-  border: 1px dashed rgba(11, 13, 16, 0.25);
-  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(11, 13, 16, 0.12);
+  padding: 0;
   min-height: 120px;
-  background: rgba(255, 255, 255, 0.6);
+  background: transparent;
   font-size: 1rem;
-  display: grid;
-  gap: 8px;
 }
 
 .preview-card {
@@ -231,6 +229,88 @@ button:active {
   font-size: 0.95rem;
   display: grid;
   gap: 8px;
+}
+
+.gt7-card {
+  background: linear-gradient(180deg, #12161b 0%, #0a0c10 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  color: #eef2f6;
+  box-shadow: 0 22px 60px rgba(5, 6, 8, 0.45);
+  overflow: hidden;
+}
+
+.gt7-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(90deg, rgba(255, 107, 61, 0.15), rgba(242, 180, 59, 0.08));
+  display: grid;
+  gap: 6px;
+}
+
+.gt7-title {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.gt7-meta {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.gt7-grid {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.gt7-panel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.gt7-panel__title {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.gt7-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.12);
+  padding-bottom: 6px;
+}
+
+.gt7-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.gt7-row span {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.gt7-row strong {
+  color: #ffffff;
+  font-weight: 600;
+  text-align: right;
+}
+
+.gt7-empty {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .banner {

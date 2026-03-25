@@ -213,10 +213,13 @@ export default function App() {
         const countryById = new Map(countries.slice(1).map((row) => [row[0], row[1]]));
         const makerById = new Map(makers.slice(1).map((row) => [row[0], { name: row[1], countryId: row[2] }]));
         const baseById = new Map(crsbaseRows.slice(1).map((row) => [row[0], row[1]]));
+        const makerCountryOverrides = new Map([
+          ["Bugatti", "France"]
+        ]);
 
         const carList = carRows.slice(1).map((row) => {
           const maker = makerById.get(row[2]) || { name: "Unknown", countryId: "0" };
-          const country = countryById.get(maker.countryId) || "Other";
+          const country = makerCountryOverrides.get(maker.name) || countryById.get(maker.countryId) || "Other";
           return {
             id: row[0],
             name: row[1],
@@ -316,6 +319,13 @@ export default function App() {
   }, [tracks, trackSearch]);
 
   useEffect(() => {
+    if (!selectedTrack) return;
+    if (!selectedTrack.layouts.find((layout) => layout.name === trackLayout)) {
+      setTrackLayout(selectedTrack.layouts[0]?.name || "");
+    }
+  }, [selectedTrack, trackLayout]);
+
+  useEffect(() => {
     setSetupFilters({
       car: carName,
       track: trackName,
@@ -343,7 +353,14 @@ export default function App() {
 
   const trackCountries = buildOptions(filteredTracks, "country");
   const trackNames = filteredTracks.filter((t) => t.country === trackCountry).map((t) => t.name);
-  const trackLayouts = (filteredTracks.find((t) => t.name === trackName)?.layouts ?? []).map((l) => l.name);
+  const selectedTrack = useMemo(() => {
+    return (
+      tracks.find((t) => t.name === trackName && t.country === trackCountry) ||
+      tracks.find((t) => t.name === trackName) ||
+      null
+    );
+  }, [tracks, trackName, trackCountry]);
+  const trackLayouts = (selectedTrack?.layouts ?? []).map((l) => l.name);
 
   const selectionPreview = (
     <div className="preview-card">
@@ -431,17 +448,49 @@ export default function App() {
     const layout = track?.layouts.find((l) => l.name === trackLayout);
     const tireCode = tireCodeMap[tire];
     const pp = car ? stockPerfByCar.get(car.id)?.[tireCode] : null;
+    const bestSetup = setupMatches[0]?.entry || null;
 
     setResultHtml(`
-      <div><strong>Auto:</strong> ${carCountry} / ${carBrand} / ${carName}</div>
-      <div><strong>Strecke:</strong> ${trackCountry} / ${trackName} / ${trackLayout}</div>
-      <div><strong>Wetter:</strong> ${weather}</div>
-      <div><strong>Reifen:</strong> ${tire}</div>
-      <div><strong>PP (Serie):</strong> ${pp ? pp.toFixed(2) : "-"}</div>
-      <div><strong>Länge:</strong> ${layout?.length ?? "-"} m</div>
-      <div><strong>Kurven:</strong> ${layout?.corners ?? "-"}</div>
-      <div><strong>Höhenmeter:</strong> ${layout?.elevation ?? "-"} m</div>
-      <div><strong>Regen erlaubt:</strong> ${layout ? (layout.noRain ? "Nein" : "Ja") : "-"}</div>
+      <div class="gt7-card">
+        <div class="gt7-header">
+          <div class="gt7-title">Setup Sheet</div>
+          <div class="gt7-meta">${trackName} · ${trackLayout}</div>
+          <div class="gt7-meta">${weather} · ${tire}</div>
+        </div>
+        <div class="gt7-grid">
+          <div class="gt7-panel">
+            <div class="gt7-panel__title">Auto</div>
+            <div class="gt7-row"><span>Land</span><strong>${carCountry}</strong></div>
+            <div class="gt7-row"><span>Marke</span><strong>${carBrand}</strong></div>
+            <div class="gt7-row"><span>Modell</span><strong>${carName}</strong></div>
+            <div class="gt7-row"><span>PP (Serie)</span><strong>${pp ? pp.toFixed(2) : "-"}</strong></div>
+          </div>
+          <div class="gt7-panel">
+            <div class="gt7-panel__title">Strecke</div>
+            <div class="gt7-row"><span>Land</span><strong>${trackCountry}</strong></div>
+            <div class="gt7-row"><span>Name</span><strong>${trackName}</strong></div>
+            <div class="gt7-row"><span>Layout</span><strong>${trackLayout}</strong></div>
+            <div class="gt7-row"><span>Länge</span><strong>${layout?.length ?? "-"} m</strong></div>
+            <div class="gt7-row"><span>Kurven</span><strong>${layout?.corners ?? "-"}</strong></div>
+            <div class="gt7-row"><span>Höhenmeter</span><strong>${layout?.elevation ?? "-"} m</strong></div>
+            <div class="gt7-row"><span>Regen erlaubt</span><strong>${layout ? (layout.noRain ? "Nein" : "Ja") : "-"}</strong></div>
+          </div>
+          <div class="gt7-panel">
+            <div class="gt7-panel__title">Setup (geladen)</div>
+            ${
+              bestSetup
+                ? `
+              <div class="gt7-row"><span>Fahrwerk</span><strong>${bestSetup.setup?.suspension || "-"}</strong></div>
+              <div class="gt7-row"><span>Getriebe</span><strong>${bestSetup.setup?.transmission || "-"}</strong></div>
+              <div class="gt7-row"><span>Aero</span><strong>${bestSetup.setup?.aero || "-"}</strong></div>
+              <div class="gt7-row"><span>LSD</span><strong>${bestSetup.setup?.lsd || "-"}</strong></div>
+              <div class="gt7-row"><span>Notizen</span><strong>${bestSetup.setup?.notes || "-"}</strong></div>
+                `
+                : `<div class="gt7-empty">Kein passendes Setup gefunden.</div>`
+            }
+          </div>
+        </div>
+      </div>
     `);
 
     if (trackSectionRef.current) {
