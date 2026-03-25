@@ -93,22 +93,6 @@ const setupFilterState = {
   tires: "",
   search: ""
 };
-const setupFilterState = {
-  car: "",
-  track: "",
-  layout: "",
-  weather: "",
-  tires: "",
-  search: ""
-};
-const setupFilterState = {
-  car: "",
-  track: "",
-  layout: "",
-  weather: "",
-  tires: "",
-  search: ""
-};
 
 function setLoadingState(isLoading) {
   const selects = [
@@ -515,6 +499,8 @@ function renderSetupMatches() {
 }
 
 
+
+
 function generateSetup() {
   const car = findSelectedCar();
   const layout = findSelectedTrackLayout();
@@ -541,11 +527,11 @@ function generateSetup() {
 }
 
 function randomChoice(list) {
-(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
 function randomize() {
+ {
   const carList = sortCars(cars);
   const trackList = sortTracks(tracks);
 
