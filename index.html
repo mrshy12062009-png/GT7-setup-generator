@@ -33,7 +33,7 @@
     <div id="loadingIndicator" class="loading">Lädt Daten …</div>
 
     <main class="grid">
-      <section class="card">
+      <section class="card" id="carSection">
         <h2>Auto</h2>
         <div class="field">
           <label for="carCountry">Land</label>
@@ -53,7 +53,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card" id="trackSection">
         <h2>Strecke</h2>
         <div class="field">
           <label for="trackCountry">Land</label>
@@ -92,6 +92,13 @@
       <section class="card result">
         <h2>Dein Setup</h2>
         <div id="result" class="result__box">Wähle Optionen und klicke auf Generieren.</div>
+      </section>
+
+      <section class="card">
+        <h2>Auswahl</h2>
+        <div id="selectionPreview" class="preview-card">
+          Wähle zuerst ein Auto und eine Strecke.
+        </div>
       </section>
 
       <section class="card wide">
@@ -231,4 +238,3 @@
     <script type="module" src="app.js?v=4"></script>
   </body>
 </html>
-

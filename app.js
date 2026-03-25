@@ -81,6 +81,9 @@ const elements = {
   presetAero: document.getElementById("presetAero"),
   presetLsd: document.getElementById("presetLsd")
 };
+const selectionPreview = document.getElementById("selectionPreview");
+const carSection = document.getElementById("carSection");
+const trackSection = document.getElementById("trackSection");
 
 let cars = [];
 let tracks = [];
@@ -270,6 +273,7 @@ function renderCarSelectors() {
     .filter((c) => c.country === selectedCountry && c.brand === selectedBrand)
     .map((c) => c.name);
   buildOptions(elements.carName, carNames);
+  updateSelectionPreview();
 }
 
 function renderTrackSelectors() {
@@ -290,11 +294,32 @@ function renderTrackSelectors() {
 
   const layouts = list.find((t) => t.name === selectedTrack)?.layouts ?? [];
   buildOptions(elements.trackLayout, layouts.map((layout) => layout.name));
+  updateSelectionPreview();
 }
 
 function renderConditions() {
   buildOptions(elements.weather, weathers);
   buildOptions(elements.tires, tires);
+}
+
+function updateSelectionPreview() {
+  if (!selectionPreview) return;
+  const carName = elements.carName.value;
+  const carBrand = elements.carBrand.value;
+  const carCountry = elements.carCountry.value;
+  const trackName = elements.trackName.value;
+  const trackCountry = elements.trackCountry.value;
+  const trackLayout = elements.trackLayout.value;
+
+  if (!carName && !trackName) {
+    selectionPreview.textContent = "W?hle zuerst ein Auto und eine Strecke.";
+    return;
+  }
+
+  selectionPreview.innerHTML = `
+    <div><strong>Auto:</strong> ${carCountry} / ${carBrand} / ${carName}</div>
+    <div><strong>Strecke:</strong> ${trackCountry} / ${trackName} / ${trackLayout}</div>
+  `;
 }
 
 function findSelectedCar() {
@@ -841,11 +866,17 @@ if (elements.appVersion) {
 elements.carCountry.addEventListener("change", () => {
   renderCarSelectors();
   applySelectionToFilters();
+  if (trackSection) {
+    trackSection.scrollIntoView({ behavior: "smooth" });
+  }
 });
 
 elements.carBrand.addEventListener("change", () => {
   renderCarSelectors();
   applySelectionToFilters();
+  if (trackSection) {
+    trackSection.scrollIntoView({ behavior: "smooth" });
+  }
 });
 
 elements.carFilter.addEventListener("input", renderCarSelectors);
@@ -853,14 +884,23 @@ elements.carFilter.addEventListener("input", renderCarSelectors);
 elements.trackCountry.addEventListener("change", () => {
   renderTrackSelectors();
   applySelectionToFilters();
+  if (trackSection) {
+    trackSection.scrollIntoView({ behavior: "smooth" });
+  }
 });
 
 elements.trackName.addEventListener("change", () => {
   renderTrackSelectors();
   applySelectionToFilters();
+  if (trackSection) {
+    trackSection.scrollIntoView({ behavior: "smooth" });
+  }
 });
 
 elements.trackFilter.addEventListener("input", renderTrackSelectors);
+
+elements.carName.addEventListener("change", updateSelectionPreview);
+elements.trackLayout.addEventListener("change", updateSelectionPreview);
 
 elements.weather.addEventListener("change", applySelectionToFilters);
 elements.tires.addEventListener("change", applySelectionToFilters);

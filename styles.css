@@ -288,6 +288,20 @@ button:active {
   gap: 6px;
 }
 
+.preview-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  display: grid;
+  gap: 8px;
+}
+
+.preview-card strong {
+  font-weight: 700;
+}
+
 .setup-card__meta {
   display: flex;
   gap: 10px;
