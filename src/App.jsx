@@ -78,6 +78,36 @@ const seedSetupData = [
   }
 ];
 
+function buildDemoSetups(cars, tracks, count) {
+  const entries = [];
+  if (!cars.length || !tracks.length) return entries;
+  const weatherOptions = weathers;
+  const tireOptions = tires;
+
+  for (let i = 0; i < count; i += 1) {
+    const car = cars[i % cars.length];
+    const track = tracks[i % tracks.length];
+    const layout = track.layouts[i % track.layouts.length]?.name || "";
+    const weather = weatherOptions[i % weatherOptions.length];
+    const tire = tireOptions[i % tireOptions.length];
+    entries.push({
+      car: car.name,
+      track: track.name,
+      layout,
+      weather,
+      tires: tire,
+      setup: {
+        suspension: `Front ${70 + (i % 8)} / Rear ${80 + (i % 8)}`,
+        transmission: `Auto ${280 + (i % 7) * 10} km/h`,
+        aero: `Front ${90 + (i % 5) * 10} / Rear ${160 + (i % 6) * 10}`,
+        lsd: `Init ${8 + (i % 5)} / Accel ${18 + (i % 7)} / Brake ${12 + (i % 6)}`,
+        notes: "Beispiel-Setup. Bitte anpassen."
+      }
+    });
+  }
+  return entries;
+}
+
 function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -159,6 +189,14 @@ function buildOptions(list, key) {
   return [...new Set(list.map((item) => item[key]).filter(Boolean))].sort();
 }
 
+function sortCarsList(list) {
+  return [...list].sort((a, b) => {
+    return a.country.localeCompare(b.country) ||
+      a.brand.localeCompare(b.brand) ||
+      a.name.localeCompare(b.name);
+  });
+}
+
 function mergeLayoutNames(base, extra) {
   const set = new Set(base);
   extra.forEach((name) => set.add(name));
@@ -184,6 +222,7 @@ const layoutOverrides = {
   ]
 };
 
+const setupSeedKey = "gt7-setup-seeded";
 function normalizeSetupEntry(entry) {
   return {
     car: entry.car || entry.Car || entry.auto || "",
@@ -237,6 +276,19 @@ export default function App() {
 
   const [resultHtml, setResultHtml] = useState("Wähle Optionen und klicke auf Generieren.");
   const [importNote, setImportNote] = useState("");
+  const [carImportNote, setCarImportNote] = useState("");
+  const [setupUrl, setSetupUrl] = useState("");
+  const [assistantLevel, setAssistantLevel] = useState(3);
+  const [assistantIssues, setAssistantIssues] = useState({
+    understeer: false,
+    oversteer: false,
+    wheelspin: false,
+    braking: false,
+    accel: false,
+    topspeed: false,
+    tirewear: false,
+    rain: false
+  });
 
   useEffect(() => {
     try {
@@ -361,6 +413,17 @@ export default function App() {
 
     load();
   }, []);
+
+  useEffect(() => {
+    if (!cars.length || !tracks.length) return;
+    if (localStorage.getItem(setupSeedKey) === "1") return;
+    const demo = buildDemoSetups(cars, tracks, 60);
+    if (!demo.length) return;
+    const nextDb = [...setupDb, ...demo];
+    localStorage.setItem(setupStorageKey, JSON.stringify(nextDb));
+    localStorage.setItem(setupSeedKey, "1");
+    setSetupDb(nextDb);
+  }, [cars, tracks]);
 
   useEffect(() => {
     if (!cars.length) return;
@@ -523,6 +586,42 @@ export default function App() {
         return (a.entry.track || "").localeCompare(b.entry.track || "");
       });
   }, [setupDb, setupFilters]);
+
+  const assistantAdvice = useMemo(() => {
+    const level = Math.max(1, Math.min(5, Number(assistantLevel) || 3));
+    const advice = [];
+
+    if (assistantIssues.wheelspin) {
+      advice.push(`Wheelspin: LSD Accel +${level * 2}, Initial +${level}, 1./2. Gang verlängern.`);
+    }
+    if (assistantIssues.understeer) {
+      advice.push(`Untersteuern: Front-Stabi weicher, Front-Downforce +${level * 5}, Rear-Downforce -${level * 3}.`);
+    }
+    if (assistantIssues.oversteer) {
+      advice.push(`Übersteuern: Rear-Stabi weicher, Rear-Downforce +${level * 5}, LSD Accel +${level}.`);
+    }
+    if (assistantIssues.braking) {
+      advice.push(`Bremsstabilität: Brake Bias +${level} nach vorn, LSD Brake +${level}.`);
+    }
+    if (assistantIssues.accel) {
+      advice.push(`Schwacher Kurvenausgang: 2./3. Gang kürzer, LSD Accel -${level}.`);
+    }
+    if (assistantIssues.topspeed) {
+      advice.push(`Top-Speed fehlt: Getriebe länger, Rear-Downforce -${level * 5}.`);
+    }
+    if (assistantIssues.tirewear) {
+      advice.push(`Reifenverschleiß: Sturz reduzieren, weichere Stabis, ABS +${level}.`);
+    }
+    if (assistantIssues.rain) {
+      advice.push(`Regen: Fahrwerk weicher, Bodenfreiheit +${level * 2}, IM/W Reifen nutzen.`);
+    }
+
+    if (!advice.length) {
+      advice.push("Wähle ein Problem, um Empfehlungen zu sehen.");
+    }
+
+    return advice;
+  }, [assistantIssues, assistantLevel]);
 
   useEffect(() => {
     if (setupFilters.layout && !setupLayoutOptions.includes(setupFilters.layout)) {
@@ -708,6 +807,48 @@ export default function App() {
           {selectionPreview}
         </section>
 
+        <section className="card">
+          <h2>Setup-Assistent</h2>
+          <div className="field">
+            <label>Stärke</label>
+            <input
+              type="range"
+              min="1"
+              max="5"
+              value={assistantLevel}
+              onChange={(e) => setAssistantLevel(e.target.value)}
+            />
+          </div>
+          <div className="assistant-grid">
+            {[
+              ["understeer", "Untersteuern"],
+              ["oversteer", "Übersteuern"],
+              ["wheelspin", "Wheelspin"],
+              ["braking", "Bremsen instabil"],
+              ["accel", "Kurvenausgang schwach"],
+              ["topspeed", "Top-Speed fehlt"],
+              ["tirewear", "Reifenverschleiß"],
+              ["rain", "Regen-Setup"]
+            ].map(([key, label]) => (
+              <label key={key} className="assistant-check">
+                <input
+                  type="checkbox"
+                  checked={assistantIssues[key]}
+                  onChange={(e) =>
+                    setAssistantIssues((prev) => ({ ...prev, [key]: e.target.checked }))
+                  }
+                />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
+          <div className="assistant-output">
+            {assistantAdvice.map((line, idx) => (
+              <div key={`${line}-${idx}`} className="assistant-line">• {line}</div>
+            ))}
+          </div>
+        </section>
+
         <section className="card full">
           <h2>Setup-Datenbank</h2>
           <div className="muted">Einträge: {setupDb.length} · Treffer: {setupMatches.length}</div>
@@ -838,7 +979,52 @@ export default function App() {
               }}
             />
           </div>
+          <div className="field">
+            <label>Setup-Import per URL (JSON/CSV)</label>
+            <input
+              value={setupUrl}
+              onChange={(e) => setSetupUrl(e.target.value)}
+              placeholder="https://.../gt7-setups.json"
+            />
+          </div>
           <div className="actions">
+            <button
+              onClick={async () => {
+                if (!setupUrl) return;
+                try {
+                  const response = await fetch(setupUrl, { cache: "no-store" });
+                  if (!response.ok) throw new Error("URL konnte nicht geladen werden.");
+                  const text = await response.text();
+                  let entries = [];
+                  if (setupUrl.toLowerCase().endsWith(".json")) {
+                    const raw = JSON.parse(text);
+                    if (!Array.isArray(raw)) throw new Error("JSON muss ein Array sein.");
+                    entries = raw.map(normalizeSetupEntry).filter((entry) => entry.car && entry.track);
+                  } else {
+                    const rows = parseCsv(text);
+                    const header = rows[0]?.map((h) => h.trim()) ?? [];
+                    entries = rows
+                      .slice(1)
+                      .map((row) => {
+                        const obj = {};
+                        header.forEach((key, index) => {
+                          obj[key] = row[index];
+                        });
+                        return normalizeSetupEntry(obj);
+                      })
+                      .filter((entry) => entry.car && entry.track);
+                  }
+                  const nextDb = [...setupDb, ...entries];
+                  localStorage.setItem(setupStorageKey, JSON.stringify(nextDb));
+                  setSetupDb(nextDb);
+                  setImportNote(`Import ok: ${entries.length} Einträge`);
+                } catch (err) {
+                  setImportNote(`Import fehlgeschlagen: ${err.message}`);
+                }
+              }}
+            >
+              URL importieren
+            </button>
             <button
               onClick={() => {
                 const blob = new Blob([JSON.stringify(setupDb, null, 2)], { type: "application/json" });
@@ -863,6 +1049,68 @@ export default function App() {
             </button>
           </div>
           {importNote && <div className="muted">{importNote}</div>}
+
+          <div className="divider"></div>
+          <div className="field">
+            <label>Auto-Liste (KudosPrime HTML)</label>
+            <input
+              type="file"
+              accept=".html,.htm"
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                const text = await file.text();
+                try {
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(text, "text/html");
+                  const carlist = doc.querySelector("#carlist");
+                  if (!carlist) throw new Error("Konnte #carlist nicht finden.");
+                  let currentBrand = "";
+                  const imported = [];
+                  carlist.childNodes.forEach((node) => {
+                    if (node.nodeType !== 1) return;
+                    if (node.matches("p.groupby")) {
+                      const link = node.querySelector("a");
+                      if (link?.textContent) currentBrand = link.textContent.trim();
+                    } else if (node.matches("div.car")) {
+                      const nameEl = node.querySelector("a.name");
+                      const imgEl = node.querySelector("img");
+                      const name = (nameEl?.textContent || imgEl?.getAttribute("alt") || "").trim();
+                      if (currentBrand && name) {
+                        imported.push({ brand: currentBrand, name });
+                      }
+                    }
+                  });
+
+                  const countryByBrand = new Map();
+                  cars.forEach((car) => {
+                    if (!countryByBrand.has(car.brand)) {
+                      countryByBrand.set(car.brand, car.country);
+                    }
+                  });
+
+                  const existing = new Set(cars.map((car) => `${car.brand}|||${car.name}`));
+                  const newCars = imported
+                    .filter((item) => !existing.has(`${item.brand}|||${item.name}`))
+                    .map((item, index) => ({
+                      id: `kp-${Date.now()}-${index}`,
+                      name: item.name,
+                      brand: item.brand,
+                      country: countryByBrand.get(item.brand) || "Other"
+                    }));
+
+                  const nextCars = sortCarsList([...cars, ...newCars]);
+                  setCars(nextCars);
+                  setCarImportNote(`KudosPrime-Import: ${newCars.length} neue Autos`);
+                } catch (err) {
+                  setCarImportNote(`Import fehlgeschlagen: ${err.message}`);
+                } finally {
+                  event.target.value = "";
+                }
+              }}
+            />
+          </div>
+          {carImportNote && <div className="muted">{carImportNote}</div>}
 
           <div className="setup-list">
             {!setupMatches.length && (

@@ -144,6 +144,10 @@ input {
   font-size: 0.95rem;
 }
 
+input[type="range"] {
+  padding: 0;
+}
+
 select:focus,
 input:focus {
   outline: 2px solid rgba(255, 59, 48, 0.4);
@@ -250,6 +254,42 @@ button:active {
   font-size: 0.95rem;
   display: grid;
   gap: 8px;
+}
+
+.assistant-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 12px;
+}
+
+.assistant-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+}
+
+.assistant-check input {
+  width: auto;
+}
+
+.assistant-output {
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 6px;
+}
+
+.assistant-line {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .banner {
