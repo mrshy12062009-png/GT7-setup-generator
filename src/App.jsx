@@ -159,6 +159,31 @@ function buildOptions(list, key) {
   return [...new Set(list.map((item) => item[key]).filter(Boolean))].sort();
 }
 
+function mergeLayoutNames(base, extra) {
+  const set = new Set(base);
+  extra.forEach((name) => set.add(name));
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+
+const layoutOverrides = {
+  Nurburgring: [
+    "Nordschleife",
+    "Nordschleife Tourist Layout",
+    "24h",
+    "GP",
+    "Endurance",
+    "Sprint"
+  ],
+  "Nürburgring": [
+    "Nordschleife",
+    "Nordschleife Tourist Layout",
+    "24h",
+    "GP",
+    "Endurance",
+    "Sprint"
+  ]
+};
+
 function normalizeSetupEntry(entry) {
   return {
     car: entry.car || entry.Car || entry.auto || "",
@@ -374,6 +399,15 @@ export default function App() {
   }, [tracks, trackSearch]);
 
   useEffect(() => {
+    if (!tracks.length) return;
+    const names = tracks.filter((t) => t.country === trackCountry).map((t) => t.name);
+    if (!names.includes(trackName)) {
+      setTrackName(names[0] || "");
+      setTrackLayout("");
+    }
+  }, [tracks, trackCountry, trackName]);
+
+  useEffect(() => {
     setSetupFilters({
       car: carName,
       track: trackName,
@@ -401,8 +435,12 @@ export default function App() {
 
   const trackCountries = buildOptions(filteredTracks, "country");
   const trackNames = filteredTracks.filter((t) => t.country === trackCountry).map((t) => t.name);
-  const trackLayouts =
+  const baseLayouts =
     tracks.find((t) => t.name === trackName && t.country === trackCountry)?.layouts.map((l) => l.name) ?? [];
+  const trackLayouts =
+    trackCountry === "Germany" && layoutOverrides[trackName]
+      ? mergeLayoutNames(baseLayouts, layoutOverrides[trackName])
+      : baseLayouts;
 
   useEffect(() => {
     const exactTrack = tracks.find((t) => t.name === trackName && t.country === trackCountry);
