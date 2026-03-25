@@ -351,21 +351,16 @@ export default function App() {
 
   const trackCountries = buildOptions(filteredTracks, "country");
   const trackNames = filteredTracks.filter((t) => t.country === trackCountry).map((t) => t.name);
-  const selectedTrack = useMemo(() => {
-    return (
-      tracks.find((t) => t.name === trackName && t.country === trackCountry) ||
-      tracks.find((t) => t.name === trackName) ||
-      null
-    );
-  }, [tracks, trackName, trackCountry]);
-  const trackLayouts = (selectedTrack?.layouts ?? []).map((l) => l.name);
+  const trackLayouts =
+    tracks.find((t) => t.name === trackName && t.country === trackCountry)?.layouts.map((l) => l.name) ?? [];
 
   useEffect(() => {
-    if (!selectedTrack) return;
-    if (!selectedTrack.layouts.find((layout) => layout.name === trackLayout)) {
-      setTrackLayout(selectedTrack.layouts[0]?.name || "");
+    const exactTrack = tracks.find((t) => t.name === trackName && t.country === trackCountry);
+    if (!exactTrack) return;
+    if (!exactTrack.layouts.find((layout) => layout.name === trackLayout)) {
+      setTrackLayout(exactTrack.layouts[0]?.name || "");
     }
-  }, [selectedTrack, trackLayout]);
+  }, [tracks, trackName, trackCountry, trackLayout]);
 
   const selectionPreview = (
     <div className="preview-card">
@@ -504,7 +499,7 @@ export default function App() {
   };
 
   return (
-    <div>
+    <div className="app">
       <div className="bg"></div>
       <header className="hero">
         <div className="hero__content">
