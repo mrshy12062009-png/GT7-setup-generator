@@ -324,13 +324,6 @@ export default function App() {
   }, [tracks, trackSearch]);
 
   useEffect(() => {
-    if (!selectedTrack) return;
-    if (!selectedTrack.layouts.find((layout) => layout.name === trackLayout)) {
-      setTrackLayout(selectedTrack.layouts[0]?.name || "");
-    }
-  }, [selectedTrack, trackLayout]);
-
-  useEffect(() => {
     setSetupFilters({
       car: carName,
       track: trackName,
@@ -366,6 +359,13 @@ export default function App() {
     );
   }, [tracks, trackName, trackCountry]);
   const trackLayouts = (selectedTrack?.layouts ?? []).map((l) => l.name);
+
+  useEffect(() => {
+    if (!selectedTrack) return;
+    if (!selectedTrack.layouts.find((layout) => layout.name === trackLayout)) {
+      setTrackLayout(selectedTrack.layouts[0]?.name || "");
+    }
+  }, [selectedTrack, trackLayout]);
 
   const selectionPreview = (
     <div className="preview-card">
