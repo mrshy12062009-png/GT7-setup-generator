@@ -170,8 +170,13 @@ export default function App() {
   const [importNote, setImportNote] = useState("");
 
   useEffect(() => {
-    const stored = localStorage.getItem(setupStorageKey);
-    setSetupDb(stored ? JSON.parse(stored) : []);
+    try {
+      const stored = localStorage.getItem(setupStorageKey);
+      setSetupDb(stored ? JSON.parse(stored) : []);
+    } catch (error) {
+      localStorage.removeItem(setupStorageKey);
+      setSetupDb([]);
+    }
   }, []);
 
   useEffect(() => {
