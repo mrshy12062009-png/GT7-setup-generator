@@ -101,6 +101,14 @@ const setupFilterState = {
   tires: "",
   search: ""
 };
+const setupFilterState = {
+  car: "",
+  track: "",
+  layout: "",
+  weather: "",
+  tires: "",
+  search: ""
+};
 
 function setLoadingState(isLoading) {
   const selects = [
@@ -333,8 +341,9 @@ function saveSetupDb() {
 
 
 
+
 function updateSetupCount() {
-  elements.setupCount.textContent = `${setupDb.length} Eintr?ge`;
+  elements.setupCount.textContent = `${setupDb.length} Einträge`;
 }
 
 function getCurrentSelectionFilter() {
@@ -482,7 +491,7 @@ function renderSetupMatches() {
   elements.setupMatchCount.textContent = `${matches.length} Treffer`;
 
   if (!matches.length) {
-    elements.setupMatches.innerHTML = "<div class="muted">Keine passenden Setups gefunden.</div>";
+    elements.setupMatches.innerHTML = "<div class=\"muted\">Keine passenden Setups gefunden.</div>";
     return;
   }
 
@@ -505,9 +514,8 @@ function renderSetupMatches() {
     .join("");
 }
 
+
 function generateSetup() {
- {
- {
   const car = findSelectedCar();
   const layout = findSelectedTrackLayout();
   const tireName = elements.tires.value;
@@ -533,6 +541,7 @@ function generateSetup() {
 }
 
 function randomChoice(list) {
+(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
@@ -662,7 +671,7 @@ function exportSetups() {
 function clearSetups() {
   setupDb = [];
   saveSetupDb();
-  elements.setupMatches.innerHTML = "<div class=\"muted\">Setup-Datenbank gel?scht.</div>";
+  elements.setupMatches.innerHTML = "<div class=\"muted\">Setup-Datenbank gelöscht.</div>";
 }
 
 function savePreset() {
@@ -812,7 +821,7 @@ async function loadData() {
       "Quelle: GT7Info (Community). Remote wird bei jedem Laden abgefragt.";
   } catch (error) {
     elements.dataStatus.textContent =
-      "Fehler beim Laden der Daten. Bitte Seite neu laden oder lokal mit einem Webserver ?ffnen.";
+      "Fehler beim Laden der Daten. Bitte Seite neu laden oder lokal mit einem Webserver öffnen.";
   } finally {
     setLoadingState(false);
     renderConditions();
