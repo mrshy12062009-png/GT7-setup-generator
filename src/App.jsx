@@ -74,10 +74,12 @@ function parseCsv(text) {
   return rows;
 }
 
-async function fetchText(url) {
-  const response = await fetch(url, { cache: "no-store" });
+async function fetchText(url, options = {}) {
+  const version = options.version;
+  const finalUrl = version ? `${url}?v=${encodeURIComponent(version)}` : url;
+  const response = await fetch(finalUrl, { cache: "no-store" });
   if (!response.ok) {
-    throw new Error(`Failed to load ${url}`);
+    throw new Error(`Failed to load ${finalUrl}`);
   }
   return response.text();
 }
@@ -148,7 +150,7 @@ export default function App() {
     search: ""
   });
 
-  const [resultHtml, setResultHtml] = useState("Wähle Optionen und klicke auf Generieren.");
+  const [resultHtml, setResultHtml] = useState("Wï¿½hle Optionen und klicke auf Generieren.");
 
   useEffect(() => {
     const stored = localStorage.getItem(setupStorageKey);
@@ -160,14 +162,28 @@ export default function App() {
       setLoading(true);
       setError("");
       try {
+        let versionToken = Date.now().toString();
+        try {
+          const metaText = await fetchText(DATA_META_REMOTE);
+          const meta = JSON.parse(metaText);
+          if (meta?.updatetimestamp) {
+            setDataUpdated(meta.updatetimestamp);
+            versionToken = meta.updatetimestamp;
+          } else {
+            setDataUpdated("unbekannt");
+          }
+        } catch {
+          setDataUpdated("unbekannt");
+        }
+
         const [carsText, makerText, countryText, courseText, crsbaseText, stockText] =
           await Promise.all([
-            fetchText(`${DATA_BASE_REMOTE}/cars.csv`),
-            fetchText(`${DATA_BASE_REMOTE}/maker.csv`),
-            fetchText(`${DATA_BASE_REMOTE}/country.csv`),
-            fetchText(`${DATA_BASE_REMOTE}/course.csv`),
-            fetchText(`${DATA_BASE_REMOTE}/crsbase.csv`),
-            fetchText(`${DATA_BASE_REMOTE}/stockperf.csv`)
+            fetchText(`${DATA_BASE_REMOTE}/cars.csv`, { version: versionToken }),
+            fetchText(`${DATA_BASE_REMOTE}/maker.csv`, { version: versionToken }),
+            fetchText(`${DATA_BASE_REMOTE}/country.csv`, { version: versionToken }),
+            fetchText(`${DATA_BASE_REMOTE}/course.csv`, { version: versionToken }),
+            fetchText(`${DATA_BASE_REMOTE}/crsbase.csv`, { version: versionToken }),
+            fetchText(`${DATA_BASE_REMOTE}/stockperf.csv`, { version: versionToken })
           ]);
 
         const countries = parseCsv(countryText);
@@ -236,12 +252,8 @@ export default function App() {
         setCars(carList);
         setTracks(trackList);
         setStockPerfByCar(stockMap);
-
-        const metaText = await fetchText(DATA_META_REMOTE);
-        const meta = JSON.parse(metaText);
-        if (meta?.updatetimestamp) setDataUpdated(meta.updatetimestamp);
       } catch (err) {
-        setError("Daten konnten nicht geladen werden. Bitte später erneut versuchen oder Seite neu laden.");
+        setError("Daten konnten nicht geladen werden. Bitte spï¿½ter erneut versuchen oder Seite neu laden.");
       } finally {
         setLoading(false);
       }
@@ -335,9 +347,9 @@ export default function App() {
       <div><strong>Wetter:</strong> ${weather}</div>
       <div><strong>Reifen:</strong> ${tire}</div>
       <div><strong>PP (Serie):</strong> ${pp ? pp.toFixed(2) : "-"}</div>
-      <div><strong>Länge:</strong> ${layout?.length ?? "-"} m</div>
+      <div><strong>Lï¿½nge:</strong> ${layout?.length ?? "-"} m</div>
       <div><strong>Kurven:</strong> ${layout?.corners ?? "-"}</div>
-      <div><strong>Höhenmeter:</strong> ${layout?.elevation ?? "-"} m</div>
+      <div><strong>Hï¿½henmeter:</strong> ${layout?.elevation ?? "-"} m</div>
       <div><strong>Regen erlaubt:</strong> ${layout ? (layout.noRain ? "Nein" : "Ja") : "-"}</div>
     `);
 
@@ -353,7 +365,7 @@ export default function App() {
         <div className="hero__content">
           <p className="kicker">Gran Turismo 7</p>
           <h1>Setup Generator</h1>
-          <p className="sub">Sortiert nach Land und Marke. Wähle Auto, Strecke, Layout, Wetter und Reifen.</p>
+          <p className="sub">Sortiert nach Land und Marke. Wï¿½hle Auto, Strecke, Layout, Wetter und Reifen.</p>
         </div>
         <div className="hero__panel">
           <div className="stat">
@@ -368,7 +380,7 @@ export default function App() {
       </header>
 
       {error && <div className="banner is-visible">{error}</div>}
-      {loading && <div className="loading is-visible">Lädt Daten …</div>}
+      {loading && <div className="loading is-visible">Lï¿½dt Daten ï¿½</div>}
 
       <main className="grid">
         <section className="card">
@@ -472,7 +484,7 @@ export default function App() {
       <footer className="footer">
         <div className="data-status">Quelle: GT7Info (Community)</div>
         <div className="note">Letztes Update: {dataUpdated}</div>
-        <div className="note">Setup-Empfehlungen sind nur möglich, wenn eine Setup-Datenbank vorhanden ist.</div>
+        <div className="note">Setup-Empfehlungen sind nur mï¿½glich, wenn eine Setup-Datenbank vorhanden ist.</div>
       </footer>
     </div>
   );
