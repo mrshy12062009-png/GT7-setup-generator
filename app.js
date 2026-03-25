@@ -55,6 +55,8 @@ const elements = {
   newTrackLayouts: document.getElementById("newTrackLayouts"),
   dataStatus: document.getElementById("dataStatus"),
   dataUpdated: document.getElementById("dataUpdated"),
+  loadingIndicator: document.getElementById("loadingIndicator"),
+  errorBanner: document.getElementById("errorBanner"),
   setupImport: document.getElementById("setupImport"),
   setupImportBtn: document.getElementById("setupImportBtn"),
   setupClearBtn: document.getElementById("setupClearBtn"),
@@ -109,7 +111,11 @@ function setLoadingState(isLoading) {
       select.innerHTML = "<option>Loading...</option>";
     }
   });
+  if (elements.loadingIndicator) {
+    elements.loadingIndicator.classList.toggle("is-visible", isLoading);
+  }
 }
+
 
 function parseCsv(text) {
   const rows = [];
@@ -516,9 +522,9 @@ function generateSetup() {
     <div><strong>Wetter:</strong> ${elements.weather.value}</div>
     <div><strong>Reifen:</strong> ${tireName}</div>
     <div><strong>PP (Serie):</strong> ${pp ? pp.toFixed(2) : "-"}</div>
-    <div><strong>L?nge:</strong> ${layout ? formatNumber(layout.length, " m") : "-"}</div>
+    <div><strong>L\u00e4nge:</strong> ${layout ? formatNumber(layout.length, " m") : "-"}</div>
     <div><strong>Kurven:</strong> ${layout ? formatNumber(layout.corners) : "-"}</div>
-    <div><strong>H?henmeter:</strong> ${layout ? formatNumber(layout.elevation, " m") : "-"}</div>
+    <div><strong>H\u00f6henmeter:</strong> ${layout ? formatNumber(layout.elevation, " m") : "-"}</div>
     <div><strong>Regen erlaubt:</strong> ${layout ? (layout.noRain ? "Nein" : "Ja") : "-"}</div>
     <div><strong>Engine Swap:</strong> ${engineSwaps && engineSwaps.length ? engineSwaps.join(", ") : "-"}</div>
   `;
@@ -531,7 +537,7 @@ function randomChoice(list) {
 }
 
 function randomize() {
- {
+
   const carList = sortCars(cars);
   const trackList = sortTracks(tracks);
 
@@ -805,6 +811,10 @@ async function loadData() {
 
     elements.dataStatus.textContent =
       "Quelle: GT7Info (Community). Remote wird bei jedem Laden abgefragt.";
+    if (elements.errorBanner) {
+      elements.errorBanner.classList.remove("is-visible");
+      elements.errorBanner.textContent = "";
+    }
   } catch (error) {
     elements.dataStatus.textContent =
       "Fehler beim Laden der Daten. Bitte Seite neu laden oder lokal mit einem Webserver öffnen.";
