@@ -1,6 +1,7 @@
 const DATA_BASE_REMOTE = "https://ddm999.github.io/gt7info/data/db";
 const DATA_META_REMOTE = "https://ddm999.github.io/gt7info/data.json";
 const DATA_BASE_LOCAL = "./data";
+const APP_VERSION = "2026-03-25.1";
 
 const weathers = ["Clear", "Overcast", "Rain", "Variable", "Sunset", "Night", "Random"];
 const tires = [
@@ -55,6 +56,7 @@ const elements = {
   newTrackLayouts: document.getElementById("newTrackLayouts"),
   dataStatus: document.getElementById("dataStatus"),
   dataUpdated: document.getElementById("dataUpdated"),
+  appVersion: document.getElementById("appVersion"),
   loadingIndicator: document.getElementById("loadingIndicator"),
   errorBanner: document.getElementById("errorBanner"),
   setupImport: document.getElementById("setupImport"),
@@ -832,6 +834,9 @@ renderConditions();
 setLoadingState(true);
 loadMetaTimestamp();
 loadData();
+if (elements.appVersion) {
+  elements.appVersion.textContent = `Version: ${APP_VERSION}`;
+}
 
 elements.carCountry.addEventListener("change", () => {
   renderCarSelectors();
