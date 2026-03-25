@@ -93,6 +93,14 @@ const setupFilterState = {
   tires: "",
   search: ""
 };
+const setupFilterState = {
+  car: "",
+  track: "",
+  layout: "",
+  weather: "",
+  tires: "",
+  search: ""
+};
 
 function setLoadingState(isLoading) {
   const selects = [
@@ -324,8 +332,9 @@ function saveSetupDb() {
 }
 
 
+
 function updateSetupCount() {
-  elements.setupCount.textContent = `${setupDb.length} Eintraege`;
+  elements.setupCount.textContent = `${setupDb.length} Eintr?ge`;
 }
 
 function getCurrentSelectionFilter() {
@@ -358,11 +367,23 @@ function buildOptionsWithAll(select, values, selectedValue) {
 }
 
 function updateSetupFilterOptions() {
-  const carValues = [...new Set(setupDb.map((entry) => entry.car).filter(Boolean))].sort();
-  const trackValues = [...new Set(setupDb.map((entry) => entry.track).filter(Boolean))].sort();
-  const layoutValues = [...new Set(setupDb.map((entry) => entry.layout).filter(Boolean))].sort();
-  const weatherValues = [...new Set(setupDb.map((entry) => entry.weather).filter(Boolean))].sort();
-  const tireValues = [...new Set(setupDb.map((entry) => entry.tires).filter(Boolean))].sort();
+  const carValues = cars.map((car) => car.name).filter(Boolean).sort();
+  const trackValues = tracks.map((track) => track.name).filter(Boolean).sort();
+  const weatherValues = [...weathers];
+  const tireValues = [...tires];
+
+  let layoutValues = [];
+  if (setupFilterState.track) {
+    const selectedTrack = tracks.find((track) => track.name === setupFilterState.track);
+    layoutValues = selectedTrack ? selectedTrack.layouts.map((layout) => layout.name) : [];
+  } else {
+    layoutValues = tracks.flatMap((track) => track.layouts.map((layout) => layout.name));
+  }
+  layoutValues = [...new Set(layoutValues.filter(Boolean))].sort();
+
+  if (setupFilterState.layout && !layoutValues.includes(setupFilterState.layout)) {
+    setupFilterState.layout = "";
+  }
 
   buildOptionsWithAll(elements.setupFilterCar, carValues, setupFilterState.car);
   buildOptionsWithAll(elements.setupFilterTrack, trackValues, setupFilterState.track);
@@ -391,6 +412,7 @@ function applyFiltersFromUI() {
   setupFilterState.weather = elements.setupFilterWeather.value;
   setupFilterState.tires = elements.setupFilterTires.value;
   setupFilterState.search = elements.setupFilterSearch.value.trim();
+  updateSetupFilterOptions();
   renderSetupMatches();
 }
 
@@ -432,7 +454,7 @@ function renderSetupMatches() {
       const fieldMatchCount = fieldMatches.filter(Boolean).length;
       const searchOk = entryMatchesSearch(entry, filters.search);
       const exact =
-        (activeFieldFilters.length > 0 ? fieldMatchCount == activeFieldFilters.length : true) &&
+        (activeFieldFilters.length > 0 ? fieldMatchCount === activeFieldFilters.length : true) &&
         (!hasSearch || searchOk);
 
       const include =
@@ -450,10 +472,10 @@ function renderSetupMatches() {
     })
     .filter(Boolean)
     .sort((a, b) => {
-      if (a.exact != b.exact) return a.exact ? -1 : 1;
-      if (b.score != a.score) return b.score - a.score;
+      if (a.exact !== b.exact) return a.exact ? -1 : 1;
+      if (b.score !== a.score) return b.score - a.score;
       const nameCompare = (a.entry.car || "").localeCompare(b.entry.car || "");
-      if (nameCompare != 0) return nameCompare;
+      if (nameCompare !== 0) return nameCompare;
       return (a.entry.track || "").localeCompare(b.entry.track || "");
     });
 
@@ -467,7 +489,7 @@ function renderSetupMatches() {
   elements.setupMatches.innerHTML = matches
     .map(({ entry, score, exact }) => {
       const parts = [
-        `<div><strong>${entry.car}</strong> ? ${entry.track}${entry.layout ? ` / ${entry.layout}` : ""}</div>`,
+        `<div><strong>${entry.car}</strong> — ${entry.track}${entry.layout ? ` / ${entry.layout}` : ""}</div>`,
         `<div class="setup-card__meta"><span>Score: ${score}</span>${exact ? "<span class=\"badge\">Exact Match</span>" : ""}</div>`,
         entry.weather ? `<div>Wetter: ${entry.weather}</div>` : "",
         entry.tires ? `<div>Reifen: ${entry.tires}</div>` : "",
@@ -485,6 +507,7 @@ function renderSetupMatches() {
 
 function generateSetup() {
  {
+ {
   const car = findSelectedCar();
   const layout = findSelectedTrackLayout();
   const tireName = elements.tires.value;
@@ -499,9 +522,9 @@ function generateSetup() {
     <div><strong>Wetter:</strong> ${elements.weather.value}</div>
     <div><strong>Reifen:</strong> ${tireName}</div>
     <div><strong>PP (Serie):</strong> ${pp ? pp.toFixed(2) : "-"}</div>
-    <div><strong>Laenge:</strong> ${layout ? formatNumber(layout.length, " m") : "-"}</div>
+    <div><strong>L?nge:</strong> ${layout ? formatNumber(layout.length, " m") : "-"}</div>
     <div><strong>Kurven:</strong> ${layout ? formatNumber(layout.corners) : "-"}</div>
-    <div><strong>Hoehenmeter:</strong> ${layout ? formatNumber(layout.elevation, " m") : "-"}</div>
+    <div><strong>H?henmeter:</strong> ${layout ? formatNumber(layout.elevation, " m") : "-"}</div>
     <div><strong>Regen erlaubt:</strong> ${layout ? (layout.noRain ? "Nein" : "Ja") : "-"}</div>
     <div><strong>Engine Swap:</strong> ${engineSwaps && engineSwaps.length ? engineSwaps.join(", ") : "-"}</div>
   `;
@@ -639,7 +662,7 @@ function exportSetups() {
 function clearSetups() {
   setupDb = [];
   saveSetupDb();
-  elements.setupMatches.innerHTML = "<div class=\"muted\">Setup-Datenbank geloescht.</div>";
+  elements.setupMatches.innerHTML = "<div class=\"muted\">Setup-Datenbank gel?scht.</div>";
 }
 
 function savePreset() {
@@ -789,7 +812,7 @@ async function loadData() {
       "Quelle: GT7Info (Community). Remote wird bei jedem Laden abgefragt.";
   } catch (error) {
     elements.dataStatus.textContent =
-      "Fehler beim Laden der Daten. Bitte Seite neu laden oder lokal mit einem Webserver oeffnen.";
+      "Fehler beim Laden der Daten. Bitte Seite neu laden oder lokal mit einem Webserver ?ffnen.";
   } finally {
     setLoadingState(false);
     renderConditions();

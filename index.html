@@ -15,7 +15,7 @@
       <div class="hero__content">
         <p class="kicker">Gran Turismo 7</p>
         <h1>Setup Generator</h1>
-        <p class="sub">Sortiert nach Land und Marke. Waehle Auto, Strecke, Layout, Wetter und Reifen.</p>
+        <p class="sub">Sortiert nach Land und Marke. Wähle Auto, Strecke, Layout, Wetter und Reifen.</p>
       </div>
       <div class="hero__panel">
         <div class="stat">
@@ -46,7 +46,7 @@
         </div>
         <div class="field">
           <label for="carFilter">Suche</label>
-          <input id="carFilter" type="text" placeholder="z.B. Supra" />
+          <input id="carFilter" type="text" placeholder="z. B. Supra" />
         </div>
       </section>
 
@@ -66,7 +66,7 @@
         </div>
         <div class="field">
           <label for="trackFilter">Suche</label>
-          <input id="trackFilter" type="text" placeholder="z.B. Suzuka" />
+          <input id="trackFilter" type="text" placeholder="z. B. Suzuka" />
         </div>
       </section>
 
@@ -82,13 +82,13 @@
         </div>
         <div class="actions">
           <button id="generate" class="primary">Setup generieren</button>
-          <button id="randomize" class="ghost">Zufaellig</button>
+          <button id="randomize" class="ghost">Zufällig</button>
         </div>
       </section>
 
       <section class="card result">
         <h2>Dein Setup</h2>
-        <div id="result" class="result__box">Waehle Optionen und klicke auf Generieren.</div>
+        <div id="result" class="result__box">Wähle Optionen und klicke auf Generieren.</div>
       </section>
 
       <section class="card wide">
@@ -101,7 +101,7 @@
         <div class="actions">
           <button id="setupImportBtn" class="ghost">Importieren</button>
           <button id="setupExportBtn" class="ghost">Exportieren</button>
-          <button id="setupClearBtn" class="ghost">Loeschen</button>
+          <button id="setupClearBtn" class="ghost">Löschen</button>
         </div>
         <div class="filter-panel">
           <div class="filter-row">
@@ -138,7 +138,7 @@
           </div>
         </div>
         <div class="meta-row">
-          <span id="setupCount">0 Eintraege</span>
+          <span id="setupCount">0 Einträge</span>
           <span id="setupMatchCount">0 Treffer</span>
         </div>
         <div id="setupMatches" class="setup-list">Noch keine Setups geladen.</div>
@@ -146,32 +146,32 @@
 
       <section class="card wide">
         <h2>Preset-Editor</h2>
-        <p class="muted">Speichere ein Setup fuer die aktuelle Auswahl.</p>
+        <p class="muted">Speichere ein Setup für die aktuelle Auswahl.</p>
         <div class="split">
           <div>
             <div class="field">
               <label for="presetSuspension">Fahrwerk</label>
-              <input id="presetSuspension" type="text" placeholder="z.B. 95/100, 4/6, 25/28" />
+              <input id="presetSuspension" type="text" placeholder="z. B. 95/100, 4/6, 25/28" />
             </div>
             <div class="field">
               <label for="presetTransmission">Getriebe</label>
-              <input id="presetTransmission" type="text" placeholder="z.B. 320 km/h, 3.10 Final" />
+              <input id="presetTransmission" type="text" placeholder="z. B. 320 km/h, 3.10 Final" />
             </div>
           </div>
           <div>
             <div class="field">
               <label for="presetAero">Aero</label>
-              <input id="presetAero" type="text" placeholder="z.B. 120/220" />
+              <input id="presetAero" type="text" placeholder="z. B. 120/220" />
             </div>
             <div class="field">
               <label for="presetLsd">LSD</label>
-              <input id="presetLsd" type="text" placeholder="z.B. 10/15/20" />
+              <input id="presetLsd" type="text" placeholder="z. B. 10/15/20" />
             </div>
           </div>
         </div>
         <div class="field">
           <label for="presetNote">Notiz</label>
-          <input id="presetNote" type="text" placeholder="z.B. fuer Regen anpassen" />
+          <input id="presetNote" type="text" placeholder="z. B. für Regen anpassen" />
         </div>
         <div class="actions">
           <button id="presetSave" class="primary">Preset speichern</button>
@@ -180,10 +180,10 @@
 
       <section class="card wide">
         <h2>Eigene Daten</h2>
-        <p class="muted">Neue Eintraege gelten nur fuer diese Sitzung im Browser.</p>
+        <p class="muted">Neue Einträge gelten nur für diese Sitzung im Browser.</p>
         <div class="split">
           <div>
-            <h3>Auto hinzufuegen</h3>
+            <h3>Auto hinzufügen</h3>
             <div class="field">
               <label for="newCarCountry">Land</label>
               <input id="newCarCountry" type="text" placeholder="Japan" />
@@ -196,10 +196,10 @@
               <label for="newCarName">Auto</label>
               <input id="newCarName" type="text" placeholder="GR Supra RZ" />
             </div>
-            <button id="addCar" class="ghost">Auto hinzufuegen</button>
+            <button id="addCar" class="ghost">Auto hinzufügen</button>
           </div>
           <div>
-            <h3>Strecke hinzufuegen</h3>
+            <h3>Strecke hinzufügen</h3>
             <div class="field">
               <label for="newTrackCountry">Land</label>
               <input id="newTrackCountry" type="text" placeholder="UK" />
@@ -212,7 +212,7 @@
               <label for="newTrackLayouts">Layouts (Komma)</label>
               <input id="newTrackLayouts" type="text" placeholder="GP, Indy" />
             </div>
-            <button id="addTrack" class="ghost">Strecke hinzufuegen</button>
+            <button id="addTrack" class="ghost">Strecke hinzufügen</button>
           </div>
         </div>
       </section>
@@ -227,3 +227,4 @@
     <script type="module" src="app.js"></script>
   </body>
 </html>
+
