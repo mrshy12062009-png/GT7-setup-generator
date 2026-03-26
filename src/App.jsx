@@ -416,14 +416,15 @@ export default function App() {
 
   useEffect(() => {
     if (!cars.length || !tracks.length) return;
-    if (localStorage.getItem(setupSeedKey) === "1") return;
+    if (localStorage.getItem(setupSeedKey) === "1" && setupDb.length) return;
+    if (setupDb.length) return;
     const demo = buildDemoSetups(cars, tracks, 60);
     if (!demo.length) return;
-    const nextDb = [...setupDb, ...demo];
+    const nextDb = [...demo];
     localStorage.setItem(setupStorageKey, JSON.stringify(nextDb));
     localStorage.setItem(setupSeedKey, "1");
     setSetupDb(nextDb);
-  }, [cars, tracks]);
+  }, [cars, tracks, setupDb.length]);
 
   useEffect(() => {
     if (!cars.length) return;
@@ -635,7 +636,7 @@ export default function App() {
     const layout = track?.layouts.find((l) => l.name === trackLayout);
     const tireCode = tireCodeMap[tire];
     const pp = car ? stockPerfByCar.get(car.id)?.[tireCode] : null;
-    const bestSetup = setupMatches[0]?.entry || null;
+    const bestSetup = setupMatches[0]?.entry || setupDb[0] || null;
 
     setResultHtml(`
       <div class="gt7-card">
